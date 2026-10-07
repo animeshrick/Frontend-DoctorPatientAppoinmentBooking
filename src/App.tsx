@@ -1,67 +1,52 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { homePathFor, useAuth } from './auth/useAuth'
-import { RequireAuth } from './auth/RequireAuth'
-import { Layout } from './components/Layout'
-import { Spinner } from './components/ui'
-import AccountPage from './pages/AccountPage'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './auth/useAuth'
 import LoginPage from './pages/LoginPage'
-import NotFoundPage from './pages/NotFoundPage'
-import RegisterPage from './pages/RegisterPage'
-import AvailabilityPage from './pages/doctor/AvailabilityPage'
-import DoctorProfilePage from './pages/doctor/DoctorProfilePage'
-import HolidaysPage from './pages/doctor/HolidaysPage'
-import AppointmentsPage from './pages/patient/AppointmentsPage'
+import Layout from './components/Layout'
+import HomePage from './pages/HomePage'
+import AccountPage from './pages/AccountPage'
+import FindDoctorPage from './pages/FindDoctorPage'
 import BookAppointmentPage from './pages/patient/BookAppointmentPage'
-import FindDoctorPage from './pages/patient/FindDoctorPage'
-import PatientProfilesPage from './pages/patient/PatientProfilesPage'
-
-/** "/" sends the user to their home page, or to login. */
-function HomeRedirect() {
-  const { user, loading } = useAuth()
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner />
-      </div>
-    )
-  }
-  return <Navigate to={user ? homePathFor(user.role) : '/login'} replace />
-}
+import DoctorAppointmentsPage from './pages/doctor/DoctorAppointmentsPage'
+import DoctorProfilePage from './pages/doctor/DoctorProfilePage'
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomeRedirect />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-      {/* Patient pages (backend role USER) */}
-      <Route element={<RequireAuth roles={['USER']} />}>
-        <Route element={<Layout />}>
-          <Route path="/patient/appointments" element={<AppointmentsPage />} />
-          <Route path="/patient/book" element={<BookAppointmentPage />} />
-          <Route path="/patient/doctors" element={<FindDoctorPage />} />
-          <Route path="/patient/profiles" element={<PatientProfilesPage />} />
-        </Route>
-      </Route>
+          <Route element={<Layout />}>
+            {/* Patient routes */}
+            <Route path="/patient">
+              <Route index element={<HomePage />} />
+              <Route path="account" element={<AccountPage />} />
+              <Route path="find-doctor" element={<FindDoctorPage />} />
+              <Route path="book" element={<BookAppointmentPage />} />
+            </Route>
 
-      {/* Doctor pages */}
-      <Route element={<RequireAuth roles={['DOCTOR']} />}>
-        <Route element={<Layout />}>
-          <Route path="/doctor/profile" element={<DoctorProfilePage />} />
-          <Route path="/doctor/availability" element={<AvailabilityPage />} />
-          <Route path="/doctor/holidays" element={<HolidaysPage />} />
-        </Route>
-      </Route>
+            {/* Doctor routes */}
+            <Route path="/doctor">
+              <Route index element={<HomePage />} />
+              <Route path="account" element={<AccountPage />} />
+              <Route path="profile" element={<DoctorProfilePage />} />
+              <Route path="appointments" element={<DoctorAppointmentsPage />} />
+            </Route>
 
-      {/* Any logged-in user */}
-      <Route element={<RequireAuth />}>
-        <Route element={<Layout />}>
-          <Route path="/account" element={<AccountPage />} />
-        </Route>
-      </Route>
+            {/* Admin routes - can add here in future */}
+            <Route path="/admin">
+              <Route index element={<HomePage />} />
+              <Route path="account" element={<AccountPage />} />
+            </Route>
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+            {/* Home redirect */}
+            <Route path="/" element={<Navigate to="/patient" replace />} />
+          </Route>
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
