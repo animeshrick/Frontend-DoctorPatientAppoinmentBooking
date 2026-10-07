@@ -30,12 +30,13 @@ export default function AccountPage() {
     ['Email', user.email || '-'],
     ['Date of birth', /^\d{4}-\d{2}-\d{2}/.test(user.dob) ? formatDate(user.dob) : user.dob || '-'],
     ['Account type', ROLE_LABELS[user.role]],
-    ['User ID', String(user.id)],
+    // Only show User ID to ADMIN users
+    ...(user.role === 'ADMIN' ? [['User ID', String(user.id)]] : []),
   ]
 
   return (
     <>
-      <PageHeader title="Account" />
+      <PageHeader title="Account" subtitle="Manage your account details and preferences." />
 
       {user.role === 'ADMIN' && (
         <div className="mb-4">
@@ -44,30 +45,31 @@ export default function AccountPage() {
       )}
 
       <Card>
-        <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+        <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
           {rows.map(([label, value]) => (
             <div key={label}>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
-              <dd className="text-sm text-slate-900">{value}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</dt>
+              <dd className="mt-1.5 text-sm text-slate-900 dark:text-slate-100">{value}</dd>
             </div>
           ))}
         </dl>
       </Card>
 
       {user.role !== 'ADMIN' && (
-        <Card className="mt-6 border-red-200">
-          <h2 className="text-base font-semibold text-red-700">Delete account</h2>
-          <p className="mt-1 text-sm text-slate-600">
+        <Card className="mt-6 border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20">
+          <h2 className="text-base font-semibold text-red-700 dark:text-red-400">Delete account</h2>
+          <p className="mt-2 text-sm text-red-700 dark:text-red-300">
             This permanently deletes your account and cannot be undone. Type your phone number ({user.phone}) to
             confirm.
           </p>
-          <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div className="mt-5 flex flex-wrap items-end gap-3">
             <div className="w-64">
-              <Field label="Phone number">
+              <Field label="Phone number" required>
                 <input
                   className={inputClass}
                   value={confirmPhone}
                   onChange={(e) => setConfirmPhone(e.target.value)}
+                  placeholder={user.phone}
                 />
               </Field>
             </div>
@@ -81,7 +83,7 @@ export default function AccountPage() {
             </Button>
           </div>
           {deleteMutation.isError && (
-            <div className="mt-3">
+            <div className="mt-4">
               <Alert kind="error">{getErrorMessage(deleteMutation.error)}</Alert>
             </div>
           )}
