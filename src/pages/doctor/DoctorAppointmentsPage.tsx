@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { getMyAppointments } from '../../api/appointments'
 import { getErrorMessage } from '../../api/client'
 import { Badge, Card, Field, PageHeader, Spinner, Alert, EmptyState, inputClass } from '../../components/ui'
-import { formatDate, todayString, toDateString, parseDateString } from '../../lib/dates'
+import { formatDate, todayString } from '../../lib/dates'
 import { labelOf, APPOINTMENT_STATUSES } from '../../lib/labels'
 
 export default function DoctorAppointmentsPage() {
