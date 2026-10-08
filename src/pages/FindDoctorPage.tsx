@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Card, Field, PageHeader, Spinner, inputClass, EmptyState } from '../components/ui'
 import { parseId } from '../lib/ids'
 import { DoctorSummary } from './patient/DoctorSummary'
@@ -33,7 +32,7 @@ export default function FindDoctorPage() {
 
   // For name/specialization search - this would call a backend endpoint
   // For now, we'll show the search UI and assume the backend will support it
-  const [mockSearchResults, setMockSearchResults] = useState<any[]>([])
+  const [, setMockSearchResults] = useState<any[]>([])
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()

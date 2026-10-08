@@ -31,7 +31,7 @@ export default function AccountPage() {
     ['Date of birth', /^\d{4}-\d{2}-\d{2}/.test(user.dob) ? formatDate(user.dob) : user.dob || '-'],
     ['Account type', ROLE_LABELS[user.role]],
     // Only show User ID to ADMIN users
-    ...(user.role === 'ADMIN' ? [['User ID', String(user.id)]] : []),
+    ...(user.role === 'ADMIN' ? ([['User ID', String(user.id)]] as [string, string][]) : []),
   ]
 
   return (

@@ -1,8 +1,8 @@
 import { useAuth } from '../auth/useAuth'
-import { Link, useLocation } from 'react-router-dom'
-import { Button, Divider } from './ui'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Button } from './ui'
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
   const { user, logout } = useAuth()
   const location = useLocation()
 
@@ -78,7 +78,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 px-6 py-8 sm:px-8 sm:py-10">{children}</main>
+        <main className="flex-1 px-6 py-8 sm:px-8 sm:py-10">
+          <Outlet />
+        </main>
       </div>
     </div>
   )

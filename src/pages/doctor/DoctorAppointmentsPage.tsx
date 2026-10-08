@@ -6,12 +6,15 @@ import { getErrorMessage } from '../../api/client'
 import { Badge, Card, Field, PageHeader, Spinner, Alert, EmptyState, inputClass } from '../../components/ui'
 import { formatDate, todayString } from '../../lib/dates'
 import { labelOf, APPOINTMENT_STATUSES } from '../../lib/labels'
+import type { AppointmentStatus } from '../../api/types'
 
 export default function DoctorAppointmentsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [fromDate, setFromDate] = useState(searchParams.get('from_date') || todayString())
   const [toDate, setToDate] = useState(searchParams.get('to_date') || '')
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '')
+  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | ''>(
+    (searchParams.get('status') as AppointmentStatus | null) || '',
+  )
 
   const appointmentsQuery = useQuery({
     queryKey: ['doctor-appointments', { from_date: fromDate, to_date: toDate, status: statusFilter }],
@@ -82,11 +85,11 @@ export default function DoctorAppointmentsPage() {
             </Field>
 
             <Field label="Status" hint="Filter by appointment status">
-              <select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <select className={inputClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | '')}>
                 <option value="">All statuses</option>
                 {APPOINTMENT_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {labelOf(status, APPOINTMENT_STATUSES)}
+                  <option key={status.value} value={status.value}>
+                    {status.label}
                   </option>
                 ))}
               </select>
@@ -141,7 +144,7 @@ export default function DoctorAppointmentsPage() {
                       {formatDate(apt.appointment_date)} • {apt.consultation_type}
                     </p>
                   </div>
-                  <Badge tone={getToneFront(apt.status)}>{labelOf(apt.status, APPOINTMENT_STATUSES)}</Badge>
+                  <Badge tone={getToneFront(apt.status)}>{labelOf(APPOINTMENT_STATUSES, apt.status)}</Badge>
                 </div>
 
                 {/* Patient info */}
@@ -151,9 +154,8 @@ export default function DoctorAppointmentsPage() {
                       Patient
                     </p>
                     <p className="mt-1 font-medium text-slate-900 dark:text-white">
-                      {apt.patient?.full_name || 'Unknown'}
+                      Patient ID: {apt.patient_id}
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{apt.patient?.phone}</p>
                   </div>
 
                   <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
@@ -176,11 +178,11 @@ export default function DoctorAppointmentsPage() {
                         {formatDate(apt.created_at)}
                       </p>
                     </div>
-                    {apt.cancelled_at && (
+                    {apt.cancellation_time && (
                       <div>
                         <span className="text-slate-600 dark:text-slate-400">Cancelled:</span>
                         <p className="font-medium text-red-700 dark:text-red-400">
-                          {formatDate(apt.cancelled_at)}
+                          {formatDate(apt.cancellation_time)}
                         </p>
                       </div>
                     )}
