@@ -3,8 +3,10 @@ import type { UserRole } from '../api/types'
 import { Spinner } from '../components/ui'
 import { homePathFor, useAuth } from './useAuth'
 
-/** Lets the nested pages render only for a logged-in user with an allowed role. */
-export function RequireAuth({ roles }: { roles?: UserRole[] }) {
+/** Lets the nested pages render only for a logged-in user with an allowed role.
+ * `loginPath` lets a route group (e.g. /admin) send a signed-out visitor to its
+ * own login page instead of the general one. */
+export function RequireAuth({ roles, loginPath = '/login' }: { roles?: UserRole[]; loginPath?: string }) {
   const { user, loading } = useAuth()
   const location = useLocation()
 
@@ -16,7 +18,7 @@ export function RequireAuth({ roles }: { roles?: UserRole[] }) {
     )
   }
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
+    return <Navigate to={loginPath} replace state={{ from: location.pathname + location.search }} />
   }
   if (roles && !roles.includes(user.role)) {
     return <Navigate to={homePathFor(user.role)} replace />

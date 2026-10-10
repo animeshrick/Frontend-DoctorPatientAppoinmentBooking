@@ -22,5 +22,5 @@ export function useAuth(): AuthContextValue {
 export function homePathFor(role: UserRole): string {
   if (role === 'USER') return '/patient/appointments'
   if (role === 'DOCTOR') return '/doctor/profile'
-  return '/account'
+  return '/admin/dashboard'
 }

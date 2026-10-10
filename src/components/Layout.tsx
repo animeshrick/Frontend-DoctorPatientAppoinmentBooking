@@ -23,9 +23,15 @@ export default function Layout() {
       DOCTOR: [
         { path: 'profile', label: 'Profile', icon: '👤' },
         { path: 'appointments', label: 'My Appointments', icon: '📅' },
+        { path: 'availability', label: 'Availability', icon: '🕒' },
+        { path: 'holidays', label: 'Holidays', icon: '🌴' },
         { path: '/', label: 'Home', icon: '🏠' },
       ],
       ADMIN: [
+        { path: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { path: 'patients', label: 'Patients', icon: '🧑‍🤝‍🧑' },
+        { path: 'doctors', label: 'Doctors', icon: '🩺' },
+        { path: 'appointments', label: 'Appointments', icon: '📅' },
         { path: '/', label: 'Home', icon: '🏠' },
       ],
     }

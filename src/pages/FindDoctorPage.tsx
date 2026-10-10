@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Alert, Button, Card, Field, PageHeader, Spinner, inputClass, EmptyState } from '../components/ui'
+import { useQuery } from '@tanstack/react-query'
+import { Alert, Badge, Button, Card, Field, PageHeader, Spinner, inputClass, EmptyState } from '../components/ui'
+import { getErrorMessage, getErrorStatus } from '../api/client'
+import { searchDoctors } from '../api/doctors'
 import { parseId } from '../lib/ids'
 import { DoctorSummary } from './patient/DoctorSummary'
 import { useDoctor } from './patient/useDoctor'
@@ -30,9 +33,23 @@ export default function FindDoctorPage() {
   const doctorIdParam = searchBy === 'id' ? parseId(searchParams.get('q')) : null
   const { profile: doctorProfile } = useDoctor(doctorIdParam)
 
-  // For name/specialization search - this would call a backend endpoint
-  // For now, we'll show the search UI and assume the backend will support it
-  const [, setMockSearchResults] = useState<any[]>([])
+  // For name/specialization search
+  const searchType = searchParams.get('type')
+  const searchQuery = searchParams.get('q')
+  const nameQuery = searchType === 'name' ? searchQuery : null
+  const specializationQuery = searchType === 'specialization' ? searchQuery : null
+
+  const doctorsQuery = useQuery({
+    queryKey: ['doctor-search', nameQuery, specializationQuery],
+    queryFn: () =>
+      searchDoctors({
+        name: nameQuery ?? undefined,
+        specialization: specializationQuery ?? undefined,
+        skip: 0,
+        limit: 20,
+      }),
+    enabled: nameQuery !== null || specializationQuery !== null,
+  })
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -53,8 +70,6 @@ export default function FindDoctorPage() {
       }
       setInputError(null)
       setSearchParams({ type: 'name', q: trimmedInput })
-      // TODO: Call backend search endpoint
-      // For now, this is a placeholder
     } else if (searchBy === 'specialization') {
       if (!trimmedInput) {
         setInputError('Select a specialization.')
@@ -62,8 +77,6 @@ export default function FindDoctorPage() {
       }
       setInputError(null)
       setSearchParams({ type: 'specialization', q: trimmedInput })
-      // TODO: Call backend search endpoint
-      // For now, this is a placeholder
     }
   }
 
@@ -72,7 +85,6 @@ export default function FindDoctorPage() {
     setInput('')
     setInputError(null)
     setSearchParams({})
-    setMockSearchResults([])
   }
 
   return (
@@ -143,7 +155,6 @@ export default function FindDoctorPage() {
                 onClick={() => {
                   setInput('')
                   setSearchParams({})
-                  setMockSearchResults([])
                 }}
               >
                 Clear search
@@ -175,16 +186,74 @@ export default function FindDoctorPage() {
         </>
       )}
 
-      {searchBy === 'name' && searchParams.get('q') && (
-        <Alert kind="info">
-          Doctor search by name is coming soon. For now, please use the Doctor ID search. Doctors can find their ID on their profile page.
-        </Alert>
-      )}
+      {(searchBy === 'name' || searchBy === 'specialization') && (nameQuery !== null || specializationQuery !== null) && (
+        <>
+          {doctorsQuery.isPending && <Spinner />}
 
-      {searchBy === 'specialization' && searchParams.get('q') && (
-        <Alert kind="info">
-          Doctor search by specialization is coming soon. For now, please use the Doctor ID search. Doctors can find their ID on their profile page.
-        </Alert>
+          {doctorsQuery.isError && (
+            <Alert kind="error">
+              {getErrorStatus(doctorsQuery.error) === 422
+                ? 'Enter a name or specialization to search by.'
+                : getErrorMessage(doctorsQuery.error)}
+            </Alert>
+          )}
+
+          {doctorsQuery.isSuccess && doctorsQuery.data.items.length === 0 && (
+            <EmptyState
+              title="No doctors found"
+              description={
+                searchBy === 'name'
+                  ? `No doctors matched "${searchQuery}". Try a different spelling or search by specialization.`
+                  : `No doctors found for "${searchQuery}".`
+              }
+            />
+          )}
+
+          {doctorsQuery.isSuccess && doctorsQuery.data.items.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Found {doctorsQuery.data.total} doctor{doctorsQuery.data.total !== 1 ? 's' : ''}.
+              </p>
+              {doctorsQuery.data.items.map((doctor) => (
+                <Card key={doctor.id} className="p-4 sm:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{doctor.full_name}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {doctor.specialization || 'Specialization not provided'} · Doctor ID {doctor.id}
+                        {doctor.years_of_experience !== null && ` · ${doctor.years_of_experience} years experience`}
+                      </p>
+                      {doctor.consultation_fee !== null && (
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                          Consultation fee: Rs {doctor.consultation_fee}
+                        </p>
+                      )}
+                    </div>
+                    {doctor.is_accepting_appointments ? (
+                      <Badge tone="green">Accepting appointments</Badge>
+                    ) : (
+                      <Badge tone="red">Not accepting appointments</Badge>
+                    )}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      to={`/patient/find-doctor?type=id&q=${doctor.id}`}
+                      className="inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    >
+                      View details
+                    </Link>
+                    <Link
+                      to={`/patient/book?doctor_id=${doctor.id}`}
+                      className="inline-flex rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600"
+                    >
+                      Book an appointment
+                    </Link>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {!searchParams.get('q') && (

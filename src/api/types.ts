@@ -100,6 +100,12 @@ export interface DoctorPublicProfile {
   is_accepting_appointments: boolean
   verified_at: string | null
 }
+export interface DoctorSearchResponse {
+  total: number
+  skip: number
+  limit: number
+  items: DoctorPublicProfile[]
+}
 export interface AvailabilityRequest {
   /** 0 = Monday ... 6 = Sunday */
   day_of_week: number
@@ -237,4 +243,107 @@ export interface AppointmentFilters {
   patient_id?: number
   from_date?: string
   to_date?: string
+}
+
+// ---------- Admin ----------
+export interface AdminPatientItem {
+  id: number
+  user_id: number
+  owner_full_name: string
+  owner_phone: string
+  relation_type: Relationship
+  relation_name: string | null
+  is_primary: boolean
+  age: string | null
+  gender: Gender | null
+  city: string | null
+  state: string | null
+  pincode: string | null
+  preferred_language: Language
+  created_at: string
+  updated_at: string
+}
+export interface AdminPatientListResponse {
+  total: number
+  skip: number
+  limit: number
+  items: AdminPatientItem[]
+}
+export interface AdminPatientQuery {
+  search?: string
+  skip?: number
+  limit?: number
+}
+
+export interface AdminDoctorItem {
+  id: number
+  user_id: number
+  owner_full_name: string
+  owner_phone: string
+  owner_email: string | null
+  status: DoctorProfileStatus
+  registration_number: string | null
+  specialization: string | null
+  years_of_experience: number | null
+  consultation_fee: string | null
+  is_accepting_appointments: boolean
+  verified_at: string | null
+  created_at: string
+  updated_at: string
+}
+export interface AdminDoctorListResponse {
+  total: number
+  skip: number
+  limit: number
+  items: AdminDoctorItem[]
+}
+export interface AdminDoctorQuery {
+  search?: string
+  skip?: number
+  limit?: number
+}
+
+export interface AdminAppointmentItem {
+  id: number
+  patient_id: number
+  patient_name: string
+  doctor_id: number
+  doctor_name: string
+  appointment_date: string
+  consultation_type: string
+  notes: string | null
+  status: AppointmentStatus
+  cancellation_reason: string | null
+  cancellation_category: string | null
+  cancelled_by_user_id: number | null
+  cancellation_time: string | null
+  no_show_flagged: boolean
+  created_at: string
+  updated_at: string
+}
+export interface AdminAppointmentListResponse {
+  total: number
+  skip: number
+  limit: number
+  items: AdminAppointmentItem[]
+}
+export interface AdminAppointmentQuery {
+  status_filter?: AppointmentStatus
+  doctor_id?: number
+  patient_id?: number
+  from_date?: string
+  to_date?: string
+  skip?: number
+  limit?: number
+}
+
+export interface AdminDashboardSummary {
+  total_patients: number
+  total_doctors: number
+  doctors_pending_verification: number
+  total_appointments: number
+  confirmed_appointments: number
+  cancelled_appointments: number
+  completed_appointments: number
+  appointments_today: number
 }

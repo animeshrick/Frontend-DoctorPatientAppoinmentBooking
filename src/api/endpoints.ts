@@ -13,6 +13,7 @@ export const ENDPOINTS = {
   doctors: {
     completeProfile: '/doctors/complete_profile',
     profile: '/doctors/doctor_profile',
+    search: '/doctors/search',
     uploadImage: '/doctors/upload_image',
     deleteImage: '/doctors/delete_image',
     myAvailability: '/doctors/me/availability',
@@ -37,5 +38,13 @@ export const ENDPOINTS = {
     byId: (appointmentId: number) => `/appointments/${appointmentId}`,
     cancel: (appointmentId: number) => `/appointments/${appointmentId}/cancel`,
     reschedule: (appointmentId: number) => `/appointments/${appointmentId}/reschedule`,
+  },
+  admin: {
+    dashboard: '/admin/dashboard',
+    patients: '/admin/patients',
+    doctors: '/admin/doctors',
+    appointments: '/admin/appointments',
+    cancelAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/cancel`,
+    rescheduleAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/reschedule`,
   },
 } as const

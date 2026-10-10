@@ -7,6 +7,7 @@ import type {
   DoctorProfile,
   DoctorProfileRequest,
   DoctorPublicProfile,
+  DoctorSearchResponse,
   Holiday,
   HolidayCreateRequest,
   HolidayList,
@@ -23,6 +24,19 @@ export async function getMyDoctorProfile(): Promise<DoctorProfile | null> {
     if (getErrorStatus(error) === 404) return null
     throw error
   }
+}
+
+export interface DoctorSearchParams {
+  name?: string
+  specialization?: string
+  skip?: number
+  limit?: number
+}
+
+/** Find doctors by partial name and/or specialization. */
+export async function searchDoctors(params: DoctorSearchParams): Promise<DoctorSearchResponse> {
+  const res = await api.get<ApiEnvelope<DoctorSearchResponse>>(ENDPOINTS.doctors.search, { params })
+  return res.data.data
 }
 
 /** Public view of any doctor, looked up by doctor ID. */

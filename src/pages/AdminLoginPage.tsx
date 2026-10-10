@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage, getErrorStatus } from '../api/client'
 import { homePathFor, useAuth } from '../auth/useAuth'
@@ -13,7 +13,8 @@ const schema = z.object({
 })
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+/** Separate login page for admin accounts, kept apart from the patient/doctor login. */
+export default function AdminLoginPage() {
   const { user, loading, login, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -24,6 +25,8 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { phone: '', password: '' } })
 
+  // Already signed in: send admins to the admin area, and send anyone else
+  // back to their own home page rather than letting them sit on this screen.
   if (!loading && user) {
     return <Navigate to={homePathFor(user.role)} replace />
   }
@@ -32,15 +35,13 @@ export default function LoginPage() {
     setServerError(null)
     try {
       const me = await login(values.phone, values.password)
-      if (me.role === 'ADMIN') {
+      if (me.role !== 'ADMIN') {
         logout()
-        setServerError('Admin accounts sign in at the admin login page, not here.')
+        setServerError('This login is for admin accounts only. Use the regular login page instead.')
         return
       }
       const from = (location.state as { from?: string } | null)?.from
-      // Only go back to the earlier page if it belongs to this user's role.
-      const rolePrefix = me.role === 'USER' ? '/patient' : '/doctor'
-      const target = from && from.startsWith(rolePrefix) ? from : homePathFor(me.role)
+      const target = from && from.startsWith('/admin') ? from : '/admin/account'
       navigate(target, { replace: true })
     } catch (error) {
       // The backend answers 409 for a wrong phone number or password.
@@ -51,10 +52,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-10">
       <Card className="w-full max-w-sm">
-        <h1 className="text-xl font-semibold">Log in</h1>
-        <p className="mt-1 text-sm text-slate-600">Doctor Patient Appointment Booking</p>
+        <h1 className="text-xl font-semibold">Admin login</h1>
+        <p className="mt-1 text-sm text-slate-600">Doctor Patient Appointment Booking — admin portal</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4" noValidate>
           {serverError && <Alert kind="error">{serverError}</Alert>}
@@ -68,13 +69,6 @@ export default function LoginPage() {
             Log in
           </Button>
         </form>
-
-        <p className="mt-4 text-sm text-slate-600">
-          No account yet?{' '}
-          <Link to="/register" className="font-medium text-teal-700 hover:underline">
-            Register
-          </Link>
-        </p>
       </Card>
     </div>
   )
