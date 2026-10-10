@@ -34,6 +34,24 @@ export function formatDate(value: string | null | undefined): string {
   })
 }
 
+/** Whole years between a "YYYY-MM-DD" date of birth and today. Returns null
+ * for an empty/invalid value, or if the result wouldn't fit the patient
+ * profile's 2-digit age field (0-99). */
+export function ageFromDob(dob: string | null | undefined): number | null {
+  if (!dob) return null
+  const birth = parseDateString(dob)
+  if (Number.isNaN(birth.getTime())) return null
+
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const hadBirthdayThisYear =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
+  if (!hadBirthdayThisYear) age -= 1
+
+  return age >= 0 && age <= 99 ? age : null
+}
+
 /** Backend numbering: 0 = Monday ... 6 = Sunday. */
 export const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 

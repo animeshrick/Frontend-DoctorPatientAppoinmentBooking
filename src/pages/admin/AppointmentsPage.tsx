@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { adminCancelAppointment, adminRescheduleAppointment, getAdminAppointments } from '../../api/admin'
+import {
+  adminCancelAppointment,
+  adminCompleteAppointment,
+  adminMarkAppointmentNoShow,
+  adminRescheduleAppointment,
+  adminUpdateAppointmentNotes,
+  getAdminAppointments,
+} from '../../api/admin'
 import { getErrorMessage } from '../../api/client'
 import type { AdminAppointmentItem, AdminAppointmentQuery, AppointmentStatus } from '../../api/types'
 import { Alert, Badge, Button, Card, Field, PageHeader, Spinner, inputClass } from '../../components/ui'
@@ -28,7 +35,7 @@ interface FilterForm {
 
 const EMPTY_FILTERS: FilterForm = { status: '', patientId: '', doctorId: '', fromDate: '', toDate: '' }
 
-type Panel = { id: number; kind: 'cancel' | 'reschedule' }
+type Panel = { id: number; kind: 'cancel' | 'reschedule' | 'notes' }
 
 export default function AdminAppointmentsPage() {
   const queryClient = useQueryClient()
@@ -204,7 +211,17 @@ interface RowProps {
 function AppointmentRow({ appointment, panel, onPanel, onChanged }: RowProps) {
   const today = todayString()
   const canChange = appointment.status === 'confirmed' && appointment.appointment_date >= today
+  const canMarkOutcome = appointment.status === 'confirmed'
   const toggle = (kind: Panel['kind']) => onPanel(panel === kind ? null : kind)
+
+  const completeMutation = useMutation({
+    mutationFn: () => adminCompleteAppointment(appointment.id),
+    onSuccess: () => onChanged('Appointment marked as completed.'),
+  })
+  const noShowMutation = useMutation({
+    mutationFn: () => adminMarkAppointmentNoShow(appointment.id),
+    onSuccess: () => onChanged('Appointment marked as a no-show.'),
+  })
 
   return (
     <Card>
@@ -236,7 +253,26 @@ function AppointmentRow({ appointment, panel, onPanel, onChanged }: RowProps) {
         </div>
       )}
 
+      {(completeMutation.isError || noShowMutation.isError) && (
+        <div className="mt-2">
+          <Alert kind="error">{getErrorMessage(completeMutation.error ?? noShowMutation.error)}</Alert>
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={() => toggle('notes')}>
+          {panel === 'notes' ? 'Hide notes' : 'Edit notes'}
+        </Button>
+        {canMarkOutcome && (
+          <>
+            <Button variant="secondary" loading={completeMutation.isPending} onClick={() => completeMutation.mutate()}>
+              Mark completed
+            </Button>
+            <Button variant="secondary" loading={noShowMutation.isPending} onClick={() => noShowMutation.mutate()}>
+              Mark no-show
+            </Button>
+          </>
+        )}
         {canChange && (
           <>
             <Button variant="secondary" onClick={() => toggle('reschedule')}>
@@ -249,6 +285,9 @@ function AppointmentRow({ appointment, panel, onPanel, onChanged }: RowProps) {
         )}
       </div>
 
+      {panel === 'notes' && (
+        <NotesPanel appointment={appointment} onClose={() => onPanel(null)} onChanged={onChanged} />
+      )}
       {panel === 'cancel' && (
         <CancelPanel appointmentId={appointment.id} onClose={() => onPanel(null)} onChanged={onChanged} />
       )}
@@ -256,6 +295,45 @@ function AppointmentRow({ appointment, panel, onPanel, onChanged }: RowProps) {
         <ReschedulePanel appointment={appointment} onClose={() => onPanel(null)} onChanged={onChanged} />
       )}
     </Card>
+  )
+}
+
+function NotesPanel({
+  appointment,
+  onClose,
+  onChanged,
+}: {
+  appointment: AdminAppointmentItem
+  onClose: () => void
+  onChanged: (message: string) => Promise<void>
+}) {
+  const [notes, setNotes] = useState(appointment.notes ?? '')
+  const mutation = useMutation({
+    mutationFn: () => adminUpdateAppointmentNotes(appointment.id, notes.trim()),
+    onSuccess: () => onChanged('Appointment notes updated.'),
+  })
+
+  return (
+    <div className="mt-4 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+      {mutation.isError && <Alert kind="error">{getErrorMessage(mutation.error)}</Alert>}
+      <Field label="Notes">
+        <textarea
+          className={inputClass}
+          rows={3}
+          maxLength={1000}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+      </Field>
+      <div className="flex gap-3">
+        <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
+          Save notes
+        </Button>
+        <Button variant="secondary" disabled={mutation.isPending} onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
+    </div>
   )
 }
 

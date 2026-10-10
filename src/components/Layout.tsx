@@ -6,7 +6,8 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const location = useLocation()
 
-  const isActive = (path: string) => location.pathname.includes(path)
+  const isActive = (href: string) =>
+    href === '/' ? location.pathname === '/' : location.pathname === href || location.pathname.startsWith(href + '/')
 
   const getNavItems = () => {
     if (!user) return []
@@ -17,7 +18,9 @@ export default function Layout() {
 
     const roleItems = {
       USER: [
+        { path: 'appointments', label: 'My Appointments', icon: '📅' },
         { path: 'find-doctor', label: 'Find Doctor', icon: '🔍' },
+        { path: 'profiles', label: 'Patient Profiles', icon: '🧑‍🤝‍🧑' },
         { path: '/', label: 'Home', icon: '🏠' },
       ],
       DOCTOR: [
@@ -29,9 +32,11 @@ export default function Layout() {
       ],
       ADMIN: [
         { path: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { path: 'users', label: 'Users', icon: '👥' },
         { path: 'patients', label: 'Patients', icon: '🧑‍🤝‍🧑' },
         { path: 'doctors', label: 'Doctors', icon: '🩺' },
         { path: 'appointments', label: 'Appointments', icon: '📅' },
+        { path: 'deletion-requests', label: 'Deletion Requests', icon: '🗑️' },
         { path: '/', label: 'Home', icon: '🏠' },
       ],
     }
@@ -66,19 +71,22 @@ export default function Layout() {
         {user && (
           <aside className="w-64 border-r border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
             <nav className="space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={`${baseRoute}${item.path === '/' ? '' : '/' + item.path}`}
-                  className={`block rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-teal-100 text-teal-900 dark:bg-teal-900/30 dark:text-teal-200'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {item.icon} {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const href = `${baseRoute}${item.path === '/' ? '' : '/' + item.path}`
+                return (
+                  <Link
+                    key={item.path}
+                    to={href}
+                    className={`block rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      isActive(item.path === '/' ? '/' : href)
+                        ? 'bg-teal-100 text-teal-900 dark:bg-teal-900/30 dark:text-teal-200'
+                        : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {item.icon} {item.label}
+                  </Link>
+                )
+              })}
             </nav>
           </aside>
         )}

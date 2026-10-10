@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage, getErrorStatus } from '../api/client'
 import { homePathFor, useAuth } from '../auth/useAuth'
@@ -17,6 +17,9 @@ export default function LoginPage() {
   const { user, loading, login, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const roleParam = searchParams.get('role')
+  const role = roleParam === 'USER' || roleParam === 'DOCTOR' ? roleParam : null
   const [serverError, setServerError] = useState<string | null>(null)
   const {
     register,
@@ -50,11 +53,20 @@ export default function LoginPage() {
     }
   }
 
+  const heading = role === 'USER' ? 'Patient login' : role === 'DOCTOR' ? 'Doctor login' : 'Log in'
+  const registerHref = role ? `/register?role=${role}` : '/register'
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <Card className="w-full max-w-sm">
-        <h1 className="text-xl font-semibold">Log in</h1>
-        <p className="mt-1 text-sm text-slate-600">Doctor Patient Appointment Booking</p>
+        <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-400">
+          <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5">
+            <path d="M12 15 7 10l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Back
+        </Link>
+        <h1 className="text-xl font-semibold">{heading}</h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Doctor Patient Appointment Booking</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4" noValidate>
           {serverError && <Alert kind="error">{serverError}</Alert>}
@@ -69,9 +81,9 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
           No account yet?{' '}
-          <Link to="/register" className="font-medium text-teal-700 hover:underline">
+          <Link to={registerHref} className="font-medium text-teal-700 hover:underline dark:text-teal-400">
             Register
           </Link>
         </p>

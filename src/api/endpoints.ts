@@ -5,6 +5,8 @@ export const ENDPOINTS = {
   auth: {
     login: '/auth/login',
     register: '/auth/register',
+    adminLogin: '/auth/admin/login',
+    adminRegister: '/auth/admin/register',
   },
   user: {
     me: '/user/detailsV2',
@@ -41,10 +43,25 @@ export const ENDPOINTS = {
   },
   admin: {
     dashboard: '/admin/dashboard',
+    users: '/admin/users',
     patients: '/admin/patients',
+    patient: (patientId: number) => `/admin/patients/${patientId}`,
     doctors: '/admin/doctors',
+    doctor: (doctorId: number) => `/admin/doctors/${doctorId}`,
+    verifyDoctor: (doctorId: number) => `/admin/doctors/${doctorId}/verify`,
     appointments: '/admin/appointments',
     cancelAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/cancel`,
     rescheduleAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/reschedule`,
+    appointmentNotes: (appointmentId: number) => `/admin/appointments/${appointmentId}/notes`,
+    completeAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/complete`,
+    noShowAppointment: (appointmentId: number) => `/admin/appointments/${appointmentId}/no-show`,
+    deletionRequests: '/admin/deletion-requests',
+    approveDeletionRequest: (requestId: number) => `/admin/deletion-requests/${requestId}/approve`,
+    rejectDeletionRequest: (requestId: number) => `/admin/deletion-requests/${requestId}/reject`,
+    doctorAvailability: (doctorId: number) => `/admin/doctors/${doctorId}/availability`,
+    doctorAvailabilityItem: (doctorId: number, availabilityId: number) =>
+      `/admin/doctors/${doctorId}/availability/${availabilityId}`,
+    doctorHolidays: (doctorId: number) => `/admin/doctors/${doctorId}/holidays`,
+    doctorHoliday: (doctorId: number, holidayId: number) => `/admin/doctors/${doctorId}/holidays/${holidayId}`,
   },
 } as const

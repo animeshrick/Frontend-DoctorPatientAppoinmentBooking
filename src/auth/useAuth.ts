@@ -6,6 +6,8 @@ export interface AuthContextValue {
   /** True while the saved token is being checked on page load. */
   loading: boolean
   login: (phone: string, password: string) => Promise<User>
+  /** Dedicated admin sign-in - calls /auth/admin/login, which rejects non-admin accounts itself. */
+  adminLogin: (phone: string, password: string) => Promise<User>
   register: (body: RegisterRequest) => Promise<User>
   logout: () => void
 }

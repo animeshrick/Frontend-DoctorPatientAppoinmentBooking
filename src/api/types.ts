@@ -1,6 +1,7 @@
 // Types that mirror the backend's Pydantic schemas and enums.
 
 export type UserRole = 'DOCTOR' | 'USER' | 'ADMIN'
+export type DeletionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 export type DoctorProfileStatus = 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'
 export type Language = 'en' | 'hi' | 'bn'
 export type Gender = 'male' | 'female' | 'other'
@@ -32,6 +33,15 @@ export interface RegisterRequest {
   dob: string
   role: Exclude<UserRole, 'ADMIN'>
 }
+/** Used by /auth/admin/register - no role field, it is always ADMIN. */
+export interface AdminRegisterRequest {
+  phone: string
+  password: string
+  full_name: string
+  email: string
+  dob: string
+}
+
 export interface RegisterResponse {
   id: number
   phone: string
@@ -52,6 +62,10 @@ export interface User {
 export interface DeleteAccountResponse {
   deleted_count: number
   message: string
+  /** True when a non-admin's request was filed for admin review instead of
+   * being deleted immediately. */
+  pending_approval: boolean
+  request_id: number | null
 }
 
 // ---------- Doctors ----------
@@ -256,10 +270,16 @@ export interface AdminPatientItem {
   is_primary: boolean
   age: string | null
   gender: Gender | null
+  address: string | null
   city: string | null
   state: string | null
   pincode: string | null
+  image: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   preferred_language: Language
+  notification_preference_email: boolean
+  notification_preference_sms: boolean
   created_at: string
   updated_at: string
 }
@@ -275,6 +295,23 @@ export interface AdminPatientQuery {
   limit?: number
 }
 
+/** All fields optional - only what's set is changed. Mirrors the patient's own update schema. */
+export interface AdminPatientUpdateRequest {
+  relation_type?: Relationship
+  relation_name?: string | null
+  age?: string | null
+  gender?: Gender | null
+  address?: string | null
+  city?: string | null
+  pincode?: string | null
+  state?: string | null
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  preferred_language?: Language
+  notification_preference_email?: boolean
+  notification_preference_sms?: boolean
+}
+
 export interface AdminDoctorItem {
   id: number
   user_id: number
@@ -283,11 +320,17 @@ export interface AdminDoctorItem {
   owner_email: string | null
   status: DoctorProfileStatus
   registration_number: string | null
+  license_authority: string | null
+  license_expiry_date: string | null
+  image: string | null
   specialization: string | null
   years_of_experience: number | null
+  bio: string | null
   consultation_fee: string | null
   is_accepting_appointments: boolean
   verified_at: string | null
+  verified_by_user_id: number | null
+  verified_by_name: string | null
   created_at: string
   updated_at: string
 }
@@ -301,6 +344,20 @@ export interface AdminDoctorQuery {
   search?: string
   skip?: number
   limit?: number
+}
+
+/** All fields optional - only what's set is changed. To approve with a verification
+ *  stamp, call adminVerifyDoctor() instead of setting status here directly. */
+export interface AdminDoctorUpdateRequest {
+  specialization?: string | null
+  years_of_experience?: number | null
+  bio?: string | null
+  consultation_fee?: string | null
+  is_accepting_appointments?: boolean
+  registration_number?: string | null
+  license_authority?: string | null
+  license_expiry_date?: string | null
+  status?: DoctorProfileStatus
 }
 
 export interface AdminAppointmentItem {
@@ -337,10 +394,96 @@ export interface AdminAppointmentQuery {
   limit?: number
 }
 
+export interface AdminUpdateAppointmentNotesRequest {
+  notes: string
+}
+
+/** One patient profile (family member) nested under its owning user account. */
+export interface AdminUserPatientMember {
+  id: number
+  relation_type: Relationship
+  relation_name: string | null
+  is_primary: boolean
+  age: string | null
+  gender: Gender | null
+  address: string | null
+  city: string | null
+  state: string | null
+  pincode: string | null
+  image: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  preferred_language: Language
+  notification_preference_email: boolean
+  notification_preference_sms: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminUserItem {
+  id: number
+  full_name: string
+  phone: string
+  email: string | null
+  dob: string
+  role: UserRole
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  patient_members: AdminUserPatientMember[]
+}
+
+export interface AdminUserListResponse {
+  total: number
+  skip: number
+  limit: number
+  items: AdminUserItem[]
+}
+
+export interface AdminUserQuery {
+  search?: string
+  role?: UserRole
+  skip?: number
+  limit?: number
+}
+
+
+export interface AdminDeletionRequestItem {
+  id: number
+  user_id: number | null
+  user_phone: string
+  user_full_name: string
+  user_role: UserRole
+  reason: string
+  status: DeletionRequestStatus
+  admin_note: string | null
+  reviewed_by_user_id: number | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+export interface AdminDeletionRequestListResponse {
+  total: number
+  skip: number
+  limit: number
+  items: AdminDeletionRequestItem[]
+}
+
+export interface AdminDeletionRequestQuery {
+  status?: DeletionRequestStatus
+  skip?: number
+  limit?: number
+}
+
+export interface AdminRejectDeletionRequest {
+  admin_note?: string | null
+}
+
 export interface AdminDashboardSummary {
   total_patients: number
   total_doctors: number
   doctors_pending_verification: number
+  pending_deletion_requests: number
   total_appointments: number
   confirmed_appointments: number
   cancelled_appointments: number

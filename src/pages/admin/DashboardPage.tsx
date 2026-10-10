@@ -52,6 +52,14 @@ export default function AdminDashboardPage() {
                 }}
                 to="/admin/doctors"
               />
+              <Tile
+                tile={{
+                  label: 'Pending deletion requests',
+                  value: query.data.pending_deletion_requests,
+                  tone: 'red',
+                }}
+                to="/admin/deletion-requests"
+              />
             </div>
           </section>
 

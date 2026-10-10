@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage } from '../api/client'
 import { homePathFor, useAuth } from '../auth/useAuth'
@@ -30,15 +30,20 @@ type FormValues = z.infer<typeof schema>
 export default function RegisterPage() {
   const { user, loading, register: registerUser } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const roleParam = searchParams.get('role')
+  const initialRole = roleParam === 'DOCTOR' ? 'DOCTOR' : 'USER'
   const [serverError, setServerError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { role: 'USER', full_name: '', phone: '', email: '', dob: '', password: '' },
+    defaultValues: { role: initialRole, full_name: '', phone: '', email: '', dob: '', password: '' },
   })
+  const selectedRole = watch('role')
 
   if (!loading && user && !isSubmitting) {
     return <Navigate to={homePathFor(user.role)} replace />
@@ -55,23 +60,44 @@ export default function RegisterPage() {
     }
   }
 
+  const loginHref = `/login?role=${selectedRole}`
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <Card className="w-full max-w-md">
+        <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-400">
+          <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5">
+            <path d="M12 15 7 10l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Back
+        </Link>
         <h1 className="text-xl font-semibold">Create an account</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4" noValidate>
           {serverError && <Alert kind="error">{serverError}</Alert>}
 
           <fieldset>
-            <legend className="mb-1 block text-sm font-medium text-slate-700">I am a</legend>
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="radio" value="USER" {...register('role')} /> Patient
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="radio" value="DOCTOR" {...register('role')} /> Doctor
-              </label>
+            <legend className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">I am a</legend>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-900">
+              {(['USER', 'DOCTOR'] as const).map((value) => (
+                <label
+                  key={value}
+                  className={
+                    'flex cursor-pointer items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-colors ' +
+                    (selectedRole === value
+                      ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-700 dark:text-teal-300'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200')
+                  }
+                >
+                  <input
+                    type="radio"
+                    value={value}
+                    className="sr-only"
+                    {...register('role')}
+                  />
+                  {value === 'USER' ? 'Patient' : 'Doctor'}
+                </label>
+              ))}
             </div>
           </fieldset>
 
@@ -96,9 +122,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
           Already registered?{' '}
-          <Link to="/login" className="font-medium text-teal-700 hover:underline">
+          <Link to={loginHref} className="font-medium text-teal-700 hover:underline dark:text-teal-400">
             Log in
           </Link>
         </p>

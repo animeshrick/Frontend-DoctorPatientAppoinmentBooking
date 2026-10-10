@@ -65,6 +65,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   )
 
+  const adminLogin = useCallback(
+    async (phone: string, password: string) => {
+      const res = await authApi.adminLogin({ phone, password })
+      tokenStore.set(res.access_token)
+      try {
+        const me = await authApi.getMe()
+        queryClient.clear()
+        setUser(me)
+        return me
+      } catch (error) {
+        tokenStore.clear()
+        throw error
+      }
+    },
+    [queryClient],
+  )
+
   const register = useCallback(
     async (body: RegisterRequest) => {
       const res = await authApi.register(body)
@@ -92,8 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, adminLogin, register, logout }),
+    [user, loading, login, adminLogin, register, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

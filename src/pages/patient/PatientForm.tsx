@@ -1,11 +1,14 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useAuth } from '../../auth/useAuth'
 import { getErrorMessage } from '../../api/client'
 import { createPatientProfile, updatePatientProfile } from '../../api/patients'
-import type { PatientCreateRequest, PatientFields, PatientProfile } from '../../api/types'
+import type { PatientCreateRequest, PatientFields, PatientProfile, User } from '../../api/types'
 import { Alert, Button, Field, inputClass } from '../../components/ui'
+import { ageFromDob } from '../../lib/dates'
 import { GENDERS, LANGUAGES, RELATIONSHIPS } from '../../lib/labels'
 
 // Limits match the backend's PatientProfileFields schema.
@@ -27,11 +30,17 @@ const schema = z.object({
 })
 type FormValues = z.infer<typeof schema>
 
-function toDefaults(patient?: PatientProfile): FormValues {
+/** On a brand-new "Self" profile there's no patient data yet to default from,
+ * so prefill name/age straight from the signed-in account instead of leaving
+ * them blank - the useEffect below keeps this in sync if relation is changed
+ * after the form is already open. */
+function toDefaults(patient: PatientProfile | undefined, user: User | null): FormValues {
+  const prefillFromAccount = !patient
+  const accountAge = prefillFromAccount ? ageFromDob(user?.dob) : null
   return {
     relation_type: patient?.relation_type ?? 'self',
-    relation_name: patient?.relation_name ?? '',
-    age: patient?.age ?? '',
+    relation_name: patient?.relation_name ?? (prefillFromAccount ? user?.full_name ?? '' : ''),
+    age: patient?.age ?? (accountAge !== null ? String(accountAge) : ''),
     gender: patient?.gender ?? '',
     address: patient?.address ?? '',
     city: patient?.city ?? '',
@@ -72,13 +81,27 @@ interface Props {
 }
 
 export function PatientForm({ patient, isFirstProfile = false, onDone, onCancel }: Props) {
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const isEdit = patient !== undefined
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toDefaults(patient) })
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toDefaults(patient, user) })
+  const isSelf = watch('relation_type') === 'self'
+  // "Self" always means the account holder, so on a new profile their name and
+  // age come straight from the account instead of being typed twice.
+  const lockNameAndAge = isSelf && !isEdit
+
+  useEffect(() => {
+    if (!lockNameAndAge || !user) return
+    setValue('relation_name', user.full_name, { shouldValidate: true })
+    const age = ageFromDob(user.dob)
+    if (age !== null) setValue('age', String(age), { shouldValidate: true })
+  }, [lockNameAndAge, user, setValue])
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) => {
@@ -123,11 +146,15 @@ export function PatientForm({ patient, isFirstProfile = false, onDone, onCancel 
             ))}
           </select>
         </Field>
-        <Field label="Name" error={errors.relation_name?.message} hint="Name of the person this profile is for.">
-          <input className={inputClass} {...register('relation_name')} />
+        <Field
+          label="Name"
+          error={errors.relation_name?.message}
+          hint={lockNameAndAge ? 'Taken from your account.' : 'Name of the person this profile is for.'}
+        >
+          <input className={inputClass} disabled={lockNameAndAge} {...register('relation_name')} />
         </Field>
-        <Field label="Age" error={errors.age?.message}>
-          <input className={inputClass} inputMode="numeric" maxLength={2} {...register('age')} />
+        <Field label="Age" error={errors.age?.message} hint={lockNameAndAge ? 'Taken from your date of birth.' : undefined}>
+          <input className={inputClass} inputMode="numeric" maxLength={2} disabled={lockNameAndAge} {...register('age')} />
         </Field>
         <Field label="Gender" error={errors.gender?.message}>
           <select className={inputClass} {...register('gender')}>

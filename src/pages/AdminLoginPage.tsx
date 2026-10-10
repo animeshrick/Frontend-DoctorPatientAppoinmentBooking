@@ -15,7 +15,7 @@ type FormValues = z.infer<typeof schema>
 
 /** Separate login page for admin accounts, kept apart from the patient/doctor login. */
 export default function AdminLoginPage() {
-  const { user, loading, login, logout } = useAuth()
+  const { user, loading, adminLogin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [serverError, setServerError] = useState<string | null>(null)
@@ -34,20 +34,21 @@ export default function AdminLoginPage() {
   const onSubmit = async (values: FormValues) => {
     setServerError(null)
     try {
-      const me = await login(values.phone, values.password)
-      if (me.role !== 'ADMIN') {
-        logout()
-        setServerError('This login is for admin accounts only. Use the regular login page instead.')
-        return
-      }
+      // /auth/admin/login itself rejects non-admin credentials (403), so there is
+      // no need to check the role client-side after signing in.
+      await adminLogin(values.phone, values.password)
       const from = (location.state as { from?: string } | null)?.from
-      const target = from && from.startsWith('/admin') ? from : '/admin/account'
+      const target = from && from.startsWith('/admin') ? from : '/admin/dashboard'
       navigate(target, { replace: true })
     } catch (error) {
-      // The backend answers 409 for a wrong phone number or password.
-      setServerError(
-        getErrorStatus(error) === 409 ? 'Incorrect phone number or password.' : getErrorMessage(error),
-      )
+      const status = getErrorStatus(error)
+      if (status === 409) {
+        setServerError('Incorrect phone number or password.')
+      } else if (status === 403) {
+        setServerError('This login is for admin accounts only. Use the regular login page instead.')
+      } else {
+        setServerError(getErrorMessage(error))
+      }
     }
   }
 
