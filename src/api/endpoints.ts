@@ -22,7 +22,7 @@ export const ENDPOINTS = {
     availability: (doctorId: number) => `/doctors/${doctorId}/availability`,
     myHolidays: '/doctors/me/holidays',
     holiday: (holidayId: number) => `/doctors/holidays/${holidayId}`,
-  },
+  },  
   patient: {
     create: '/patient/create',
     profiles: '/patient/profiles',
