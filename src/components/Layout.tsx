@@ -1,6 +1,7 @@
 import { useAuth } from '../auth/useAuth'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { Button } from './ui'
+import ChatAssistant from './ChatAssistant'
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -96,6 +97,8 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <ChatAssistant />
     </div>
   )
 }

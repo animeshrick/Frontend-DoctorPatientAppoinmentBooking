@@ -121,3 +121,128 @@ button, a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
 }
+
+
+/* n8n chat widget (patient assistant): readable in light and dark mode.
+   Fixes the white input box with invisible text. */
+html:root {
+  --chat--color--primary: rgb(13, 148, 136);
+  --chat--color--primary-shade-50: rgb(15, 118, 110);
+  --chat--color--primary--shade-100: rgb(17, 94, 89);
+  --chat--color--secondary: rgb(13, 148, 136);
+  --chat--header--background: rgb(15, 23, 42);
+  --chat--header--color: rgb(248, 250, 252);
+  --chat--heading--font-size: 1.25rem;
+  --chat--subtitle--font-size: 0.875rem;
+  --chat--message--bot--background: rgb(255, 255, 255);
+  --chat--message--bot--color: rgb(15, 23, 42);
+  --chat--message--user--background: rgb(13, 148, 136);
+  --chat--message--user--color: rgb(255, 255, 255);
+  --chat--input--background: rgb(255, 255, 255);
+  --chat--input--text-color: rgb(15, 23, 42);
+  --chat--input--border: 1px solid rgb(203, 213, 225);
+  --chat--input--border-active: rgb(13, 148, 136);
+  --chat--input--send--button--background: rgb(255, 255, 255);
+  --chat--input--send--button--color: rgb(13, 148, 136);
+  --chat--input--send--button--background-hover: rgb(240, 253, 250);
+  --chat--input--send--button--color-hover: rgb(15, 118, 110);
+  --chat--toggle--background: rgb(13, 148, 136);
+  --chat--toggle--hover--background: rgb(15, 118, 110);
+  --chat--toggle--active--background: rgb(17, 94, 89);
+  --chat--window--width: 380px;
+}
+.chat-inputs textarea {
+  color: rgb(15, 23, 42) !important;
+  caret-color: rgb(15, 23, 42);
+  color-scheme: light;
+}
+.chat-inputs textarea::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+
+/* ---- Doctor assistant: nicer look ---- */
+@keyframes chatpop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+html:root {
+  --chat--window--border-radius: 18px;
+  --chat--header--background: linear-gradient(135deg, rgb(13, 148, 136), rgb(15, 23, 42));
+  --chat--message--border-radius: 14px;
+  --chat--message--bot--background: rgb(255, 255, 255);
+  --chat--message--padding: 0.7rem 0.9rem;
+  --chat--message--font-size: 0.925rem;
+  --chat--color-light: rgb(241, 245, 249);
+  --chat--toggle--size: 60px;
+}
+.chat-window-wrapper .chat-window {
+  box-shadow: 0 20px 45px rgba(2, 6, 23, 0.45);
+  overflow: hidden;
+}
+.chat-window-wrapper .chat-heading h1,
+.chat-window-wrapper .chat-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.chat-window-wrapper .chat-header h1::before {
+  content: '';
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8V4H8'/%3E%3Crect width='16' height='12' x='4' y='8' rx='2'/%3E%3Cpath d='M2 14h2'/%3E%3Cpath d='M20 14h2'/%3E%3Cpath d='M15 13v2'/%3E%3Cpath d='M9 13v2'/%3E%3C/svg%3E") center / 58% no-repeat;
+}
+.chat-window-wrapper .chat-header p {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.85;
+}
+.chat-window-wrapper .chat-header p::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgb(74, 222, 128);
+}
+.chat-message-from-bot {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  border-left: 3px solid rgb(13, 148, 136);
+}
+.chat-message-from-user {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+}
+/* Toggle button: bot icon when closed, chevron when open */
+html body .chat-window-wrapper .chat-window-toggle {
+  box-shadow: 0 8px 22px rgba(13, 148, 136, 0.45);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8V4H8'/%3E%3Crect width='16' height='12' x='4' y='8' rx='2'/%3E%3Cpath d='M2 14h2'/%3E%3Cpath d='M20 14h2'/%3E%3Cpath d='M15 13v2'/%3E%3Cpath d='M9 13v2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 52%;
+}
+html body .chat-window-wrapper:has(.chat-window:not([style*='display: none'])) .chat-window-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+html body .chat-window-wrapper .chat-window-toggle svg {
+  display: none;
+}
+
+/* Input row: one clean field, no stray edge next to the send button */
+html body .chat-window-wrapper .chat-inputs textarea {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: rgb(255, 255, 255);
+}
+html body .chat-window-wrapper .chat-footer {
+  border-top: 1px solid rgb(226, 232, 240);
+  background: rgb(255, 255, 255);
+}
+html body .chat-window-wrapper .chat-input-send-button {
+  background: rgb(255, 255, 255);
+  border: 0;
+}
