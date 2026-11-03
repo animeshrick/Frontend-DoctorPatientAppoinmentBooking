@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-tech: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+.orb-pulse { animation: orb-pulse 5s ease-in-out infinite; }
+.ring-spin { animation: ring-spin 40s linear infinite; transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .orb-pulse, .ring-spin { animation: none; }
+}
+
 :root {
   /* Primary brand colors */
   --primary: rgb(13, 148, 136); /* teal-600 */
