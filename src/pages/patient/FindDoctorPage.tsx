@@ -58,7 +58,7 @@ export default function FindDoctorPage() {
             <div className="mt-4">
               <Link
                 to={`/patient/book?doctor_id=${doctorId}`}
-                className="inline-flex rounded-md bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                className="inline-flex rounded-md bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800 dark:bg-[#B8F05C] dark:text-[#06100C] dark:hover:bg-[#B8F05C] dark:hover:brightness-110"
               >
                 Book an appointment with this doctor
               </Link>

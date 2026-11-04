@@ -1,11 +1,31 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { getPublicSpecialities } from '../api/public'
+import type { PublicDoctor, PublicSpeciality } from '../api/public'
 
 const LIME = '#B8F05C'
 
 /** Heights for the sample availability chart; lime bars are the "open" slots. */
 const BARS = [34, 52, 70, 96, 110, 84, 60, 44, 76, 104, 118, 92, 66, 48, 58, 82, 100, 72, 54, 40, 62, 88, 50, 36]
 const OPEN = new Set([3, 4, 9, 10, 11, 15, 16, 17, 21])
+
+/** Shown until real specialities load, or if the list can't be loaded. */
+const FALLBACK_SPECIALITIES = [
+  'General Physician',
+  'Cardiologist',
+  'Dermatologist',
+  'Paediatrician',
+  'Neurologist',
+  'Orthopaedic',
+  'Psychiatrist',
+  'Dentist',
+]
+
+const ALL = 'All'
+
+type ShownDoctor = PublicDoctor & { speciality: string }
 
 const tag = 'font-mono-tech text-[12px] font-bold tracking-[0.14em] uppercase'
 const panel = 'rounded-[28px] border border-[#B8F05C]/20 bg-[#0E2018]/70 p-7 backdrop-blur'
@@ -132,6 +152,8 @@ export default function WelcomePage() {
           </div>
         </section>
 
+        <Specialities />
+
         {/* Role entry points */}
         <section aria-labelledby="who" className="py-10">
           <h2 id="who" className="font-display mb-8 text-center text-4xl font-bold tracking-tight sm:text-5xl">
@@ -193,10 +215,22 @@ function Orb() {
           boxShadow: '0 0 120px rgba(184,240,92,0.45), inset 0 0 40px rgba(6,16,12,0.5)',
         }}
       />
-      <svg viewBox="0 0 24 24" fill="none" stroke="#06100C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2">
-        <rect x="4" y="8" width="16" height="11" rx="3" />
-        <path d="M12 8V4M9 13h.01M15 13h.01" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="#06100C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2">
+        <path d="M11 2v2" />
+        <path d="M5 2v2" />
+        <path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+        <path d="M8 15a6 6 0 0 0 12 0v-3" />
+        <circle cx="20" cy="10" r="2" />
       </svg>
+      <div className="absolute bottom-6 right-0 flex items-center gap-2 rounded-full border border-[#B8F05C]/40 bg-[#0E2018] py-1.5 pl-2 pr-3.5 shadow-lg">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#B8F05C]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#06100C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+            <rect x="4" y="8" width="16" height="11" rx="3" />
+            <path d="M12 8V4M9 13h.01M15 13h.01" />
+          </svg>
+        </span>
+        <span className="text-sm font-bold text-[#E6FFF1]">Compounder</span>
+      </div>
     </div>
   )
 }
@@ -263,11 +297,123 @@ function PatientIcon() {
 
 function DoctorIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true">
-      <path d="M9 3v3.5a3 3 0 0 0 6 0V3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M6 3v5.5a6 6 0 0 0 12 0V3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M12 14.5v2.3a3.7 3.7 0 1 0 3.7 3.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <circle cx="18.3" cy="19" r="1.4" stroke="currentColor" strokeWidth="1.7" />
+    <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden="true" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 2v2" />
+      <path d="M5 2v2" />
+      <path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+      <path d="M8 15a6 6 0 0 0 12 0v-3" />
+      <circle cx="20" cy="10" r="2" />
     </svg>
   )
+}
+
+function Specialities() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['public-specialities'],
+    queryFn: getPublicSpecialities,
+  })
+  const [picked, setPicked] = useState<string>(ALL)
+
+  const list: PublicSpeciality[] = data ?? []
+  const totalDoctors = list.reduce((n, s) => n + s.doctor_count, 0)
+  const shown: ShownDoctor[] =
+    picked === ALL
+      ? list.flatMap((s) => s.doctors.map((d) => ({ ...d, speciality: s.specialization })))
+      : (list.find((s) => s.specialization === picked)?.doctors ?? []).map((d) => ({ ...d, speciality: picked }))
+
+  return (
+    <section aria-labelledby="specs" className="py-10">
+      <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <span className={tag} style={{ color: LIME }}>Find a doctor</span>
+        <h2 id="specs" className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
+          Our doctors
+        </h2>
+      </div>
+
+      {isLoading && <p className="text-center text-[#9DBFAE]">Loading specialities...</p>}
+
+      {!isLoading && list.length > 0 && (
+        <>
+          <div className="flex flex-wrap justify-center gap-3" role="tablist" aria-label="Specialities">
+            {[{ specialization: ALL, doctor_count: totalDoctors }, ...list].map((s) => {
+              const on = s.specialization === picked
+              return (
+                <button
+                  key={s.specialization}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setPicked(s.specialization)}
+                  className={
+                    'min-h-11 rounded-full border px-5 text-[15px] font-medium transition ' +
+                    (on
+                      ? 'border-[#B8F05C] bg-[#B8F05C] text-[#06100C]'
+                      : 'border-[#B8F05C]/30 bg-[#0E2018]/70 text-[#E6FFF1] hover:border-[#B8F05C]/70')
+                  }
+                >
+                  {s.specialization}
+                  <span className={'font-mono-tech ml-2 text-xs ' + (on ? 'text-[#06100C]/70' : 'text-[#8FB3A2]')}>
+                    {s.doctor_count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {(
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {shown.map((d) => (
+                <div key={d.id} className={panel + ' flex flex-col gap-4 !p-5'}>
+                  <div className="flex items-center gap-3">
+                    <div className="font-display flex h-14 w-14 items-center justify-center rounded-2xl bg-[#B8F05C]/15 text-xl font-bold text-[#B8F05C]">
+                      {initials(d.full_name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-bold">{d.full_name}</p>
+                      <p className="truncate text-sm text-[#9DBFAE]">{d.speciality}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-[#C5E3D3]">
+                    {d.years_of_experience != null ? `${d.years_of_experience} yrs experience` : 'Experienced doctor'}
+                  </p>
+                  <Link
+                    to="/register?role=USER"
+                    className="mt-auto inline-flex min-h-11 items-center justify-center rounded-xl bg-[#B8F05C] px-4 text-sm font-bold text-[#06100C] transition hover:brightness-110"
+                  >
+                    Sign up to book
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {!isLoading && list.length === 0 && (
+        <>
+          <div className="flex flex-wrap justify-center gap-3">
+            {FALLBACK_SPECIALITIES.map((name) => (
+              <span
+                key={name}
+                className="inline-flex min-h-11 items-center rounded-full border border-[#B8F05C]/30 bg-[#0E2018]/70 px-5 text-[15px] font-medium"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-sm text-[#9DBFAE]">
+            {isError ? 'Doctors could not be loaded right now.' : 'Doctors will appear here once they are approved.'}{' '}
+            <Link to="/register?role=USER" className="font-medium text-[#B8F05C] hover:underline">
+              Sign up to search
+            </Link>
+          </p>
+        </>
+      )}
+    </section>
+  )
+}
+
+function initials(name: string): string {
+  const parts = name.replace(/^dr\.?\s+/i, '').trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || 'DR'
 }

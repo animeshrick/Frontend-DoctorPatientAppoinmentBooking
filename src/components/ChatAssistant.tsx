@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
 import { getMyChat, saveChatMessage } from '../api/chats'
+import { API_BASE_URL, tokenStore } from '../api/client'
 
-/** n8n chat trigger URL (production webhook). Set VITE_N8N_CHAT_URL in .env. */
-const CHAT_URL = import.meta.env.VITE_N8N_CHAT_URL as string | undefined
+/** The chat goes through our own API (which checks the login token and talks to n8n
+ * on the server). The browser never sees the n8n address. */
+const CHAT_URL = `${API_BASE_URL}/chats/stream`
 
 /** @n8n/chat keeps its session id in localStorage under this key. */
 const SESSION_STORAGE_KEY = 'n8n-chat/sessionId'
@@ -27,6 +29,15 @@ interface ChatMessage {
 const SHOW_LATEST = 10
 
 /** Loads the patient's latest saved pairs from the database. Never throws. */
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {}
+  Object.defineProperty(headers, 'Authorization', {
+    enumerable: true,
+    get: () => `Bearer ${tokenStore.get() ?? ''}`,
+  })
+  return headers
+}
+
 async function loadHistory(): Promise<ChatMessage[]> {
   try {
     const saved = await getMyChat(SHOW_LATEST)
@@ -59,7 +70,6 @@ export default function ChatAssistant() {
 
 function PatientChat({ userId }: { userId: number }) {
   useEffect(() => {
-    if (!CHAT_URL) return
     let cancelled = false
     let app: { unmount: () => void } | undefined
     let saver: ReturnType<typeof setInterval> | undefined
@@ -72,7 +82,6 @@ function PatientChat({ userId }: { userId: number }) {
         import('@n8n/chat/style.css'),
       ])
       const history = await loadHistory()
-      if (cancelled) return
       if (cancelled) return
 
       // History is kept in this browser, per patient. (n8n's own history endpoint
@@ -90,7 +99,13 @@ function PatientChat({ userId }: { userId: number }) {
         loadPreviousSession: false,
         // The n8n trigger streams its reply; without this the raw stream text is shown.
         enableStreaming: true,
-        metadata: { userId, role: 'USER' },
+        // The server works out who you are from your login token; nothing about
+        // the user is sent from here. The token is read on every message, so a
+        // fresh login is picked up without recreating the chat.
+        webhookConfig: {
+          method: 'POST',
+          headers: authHeaders(),
+        },
         initialMessages: WELCOME,
         i18n: {
           en: {
@@ -196,7 +211,7 @@ function WelcomePopup({ userId }: { userId: number }) {
     } catch {
       /* storage blocked: show it each visit */
     }
-    if (seen || !CHAT_URL) return
+    if (seen) return
 
     const markSeen = () => {
       try {

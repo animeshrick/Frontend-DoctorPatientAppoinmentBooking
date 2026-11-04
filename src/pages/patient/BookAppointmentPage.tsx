@@ -116,7 +116,7 @@ export default function BookAppointmentPage() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               to="/patient/appointments"
-              className="inline-flex rounded-md bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800"
+              className="inline-flex rounded-md bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800 dark:bg-[#B8F05C] dark:text-[#06100C] dark:hover:bg-[#B8F05C] dark:hover:brightness-110"
             >
               View my appointments
             </Link>

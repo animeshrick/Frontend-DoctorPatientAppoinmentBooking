@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* The app always uses the dark theme (set on <html data-theme="dark">). */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono-tech: "JetBrains Mono", ui-monospace, monospace;
@@ -263,4 +266,55 @@ html body .chat-window-wrapper .chat-footer {
 html body .chat-window-wrapper .chat-input-send-button {
   background: rgb(255, 255, 255);
   border: 0;
+}
+
+
+/* ---- Daktar Dada dark green palette: remaps Tailwind slate/teal so every page picks it up ---- */
+:root[data-theme="dark"] {
+  --color-slate-950: #040B08;
+  --color-slate-900: #06100C;
+  --color-slate-800: #0E2018;
+  --color-slate-700: #1A3A2D;
+  --color-slate-600: #2A5646;
+  --color-slate-500: #7FA08F;
+  --color-slate-400: #8FB3A2;
+  --color-slate-300: #B7D3C4;
+  --color-slate-200: #D5E8DD;
+  --color-slate-100: #E6FFF1;
+  --color-slate-50: #F2FFF8;
+
+  --color-teal-950: #062418;
+  --color-teal-900: #0A3A29;
+  --color-teal-800: #0E5A33;
+  --color-teal-700: #12703F;
+  --color-teal-600: #16854F;
+  --color-teal-500: #6FD08A;
+  --color-teal-400: #B8F05C;
+  --color-teal-300: #D4F58F;
+  --color-teal-200: #E3F9B7;
+  --color-teal-100: #EFFBD6;
+  --color-teal-50: #F7FDEA;
+
+  --bg-secondary: #06100C;
+  --bg-primary: #0E2018;
+  --border: #1A3A2D;
+  --primary: #B8F05C;
+}
+
+/* Subtle lime glow on cards and softer corners across the logged-in app */
+:root[data-theme="dark"] .app-card {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 767px) {
+  html:root {
+    --chat--window--bottom: 84px;
+    --chat--window--right: 12px;
+    --chat--window--width: calc(100vw - 24px);
+    --chat--window--height: calc(100vh - 170px);
+  }
+  html body .chat-window-wrapper {
+    bottom: 84px !important;
+    right: 12px !important;
+  }
 }

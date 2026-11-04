@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, ReactElement, ReactNode } from 'react'
 
 // Enhanced input styles with better colors and focus states
 export const inputClass =
-  'block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm ' +
+  'block w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm shadow-sm ' +
   'placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-0 ' +
   'dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 ' +
   'dark:focus:border-teal-400 dark:focus:ring-teal-400 ' +
@@ -13,7 +13,7 @@ export const inputClass =
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'outline'
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: 'bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500',
+  primary: 'bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-800 dark:bg-[#B8F05C] dark:text-[#06100C] dark:hover:brightness-110',
   secondary: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
   danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-600',
   success: 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 dark:bg-emerald-700 dark:hover:bg-emerald-600',
@@ -47,9 +47,9 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       className={
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 ' +
+        'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ' +
         'disabled:cursor-not-allowed disabled:opacity-60 ' +
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ' +
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 dark:focus-visible:outline-[#B8F05C] ' +
         sizeClasses[size] + ' ' +
         buttonVariants[variant] + ' ' +
         className
@@ -103,9 +103,9 @@ export function Card({ children, className = '', noPadding = false }: { children
   return (
     <div
       className={
-        'rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 ' +
+        'app-card rounded-2xl border border-slate-200 bg-white dark:border-[#B8F05C]/20 dark:bg-[#0E2018]/80 ' +
         (noPadding ? '' : 'p-6 ') +
-        'shadow-sm dark:shadow-lg ' +
+        'shadow-sm ' +
         className
       }
     >
@@ -144,7 +144,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4 sm:gap-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{title}</h1>
         {subtitle && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>}
       </div>
       {action && <div className="flex items-center gap-3">{action}</div>}
@@ -174,7 +174,7 @@ export function Badge({ tone = 'gray', children, className = '' }: { tone?: Badg
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 py-12 text-center dark:border-slate-600 dark:bg-slate-800/50">
+    <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 py-12 text-center dark:border-slate-600 dark:bg-slate-800/50">
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
       {description && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}

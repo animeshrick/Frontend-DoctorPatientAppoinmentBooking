@@ -38,6 +38,7 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState<FilterForm>(EMPTY_FILTERS)
   const [applied, setApplied] = useState<FilterForm>(EMPTY_FILTERS)
   const [filterError, setFilterError] = useState<string | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(0)
   const [panel, setPanel] = useState<Panel | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -120,7 +121,7 @@ export default function AppointmentsPage() {
         action={
           <Link
             to="/patient/book"
-            className="inline-flex rounded-md bg-teal-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-teal-800"
+            className="inline-flex min-h-11 items-center rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800 dark:bg-[#B8F05C] dark:text-[#06100C] dark:hover:brightness-110"
           >
             Book appointment
           </Link>
@@ -141,8 +142,17 @@ export default function AppointmentsPage() {
 
       {hasProfiles && (
         <>
-          <Card className="mb-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            className="mb-3 flex min-h-11 w-full items-center justify-between rounded-xl border border-[#B8F05C]/25 bg-[#0E2018]/80 px-4 text-sm font-semibold md:hidden"
+          >
+            Filters
+            <span className="text-[#B8F05C]">{showFilters ? 'Hide' : 'Show'}</span>
+          </button>
+          <Card className={'mb-6 ' + (showFilters ? '' : 'hidden md:block')}>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
               <Field label="Status">
                 <select
                   className={inputClass}
